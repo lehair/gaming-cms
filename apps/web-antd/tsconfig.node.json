@@ -4,7 +4,12 @@
   "compilerOptions": {
     "composite": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
-    "noEmit": false
+    "noEmit": false,
+    // Thêm dòng này để hỗ trợ resolve các module alias trong file config
+    "baseUrl": ".",
+    "paths": {
+      "#/*": ["./src/*"]
+    }
   },
-  "include": ["vite.config.mts"]
+  "include": ["vite.config.mts", "src/router/routes/index.ts"]
 }
