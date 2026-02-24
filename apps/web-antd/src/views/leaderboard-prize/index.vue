@@ -8,7 +8,7 @@ import {
   updateLeaderboardPrize, 
   deleteLeaderboardPrize 
 } from '#/api/gaming/leaderboard-prize';
-import { message, Modal as AModal, Form as AForm, FormItem as AFormItem, InputNumber as AInputNumber, Switch as ASwitch, Input as AInput } from 'ant-design-vue';
+import { message, Modal as AModal, Form as AForm, FormItem as AFormItem, InputNumber as AInputNumber, Switch as ASwitch, Input as AInput, Button as AButton } from 'ant-design-vue';
 
 // 1. Trạng thái Modal và Form
 const isModalVisible = ref(false);
@@ -30,7 +30,7 @@ const formData = reactive({
 const gridOptions: VxeGridProps = {
   columns: [
     { type: 'seq', width: 50 },
-    { title: 'Tên Game', field: 'game.name', minWidth: 150 },
+    { title: 'Tên Game', field: 'gameId', minWidth: 150 },
     { title: 'Từ Hạng', field: 'rankFrom', width: 100, align: 'center', slots: { default: 'rank_slot' } },
     { title: 'Đến Hạng', field: 'rankTo', width: 100, align: 'center', slots: { default: 'rank_slot' } },
     { title: 'Loại Quà', field: 'rewardType', width: 100 }, 
@@ -48,11 +48,11 @@ const gridOptions: VxeGridProps = {
   proxyConfig: {
     ajax: {
       query: async () => {
-        // Lấy danh sách (không phân trang vì dữ liệu cấu hình thường ít)
-        const response = await getLeaderboardPrizeList();
+        const res: any = await getLeaderboardPrizeList();
+        const items = res?.data || res || [];
         return {
-          items: response || response?.data || [],
-          total: response?.length || response?.data?.length || 0
+          items: items,
+          total: items.length || 0
         };
       },
     },

@@ -3,7 +3,7 @@ import { ref, reactive } from 'vue';
 import { Page } from '@vben/common-ui';
 import { useVbenVxeGrid, type VxeGridProps } from '#/adapter/vxe-table';
 import { getLuckyBoxList, updateLuckyBox, deleteLuckyBox, addLuckyBox } from '#/api/gaming/luckybox';
-import { message, Modal as AModal, Form as AForm, FormItem as AFormItem, InputNumber as AInputNumber, Switch as ASwitch, Input as AInput } from 'ant-design-vue';
+import { message, Modal as AModal, Form as AForm, FormItem as AFormItem, InputNumber as AInputNumber, Switch as ASwitch, Input as AInput, Button as AButton } from 'ant-design-vue';
 
 // 1. Trạng thái Modal và Form
 const isModalVisible = ref(false);
@@ -23,7 +23,7 @@ const formData = reactive({
 const gridOptions: VxeGridProps = {
   columns: [
     { type: 'seq', width: 50 },
-    { title: 'Tên Game', field: 'game.name', minWidth: 150 },
+    { title: 'Tên Game', field: 'gameId', minWidth: 150 },
     { title: 'Loại Quà', field: 'rewardType', width: 100 }, 
     { title: 'Vật Phẩm ID', field: 'rewardId', width: 120 },
     { title: 'Số Lượng', field: 'quantity', width: 100 },
@@ -39,13 +39,14 @@ const gridOptions: VxeGridProps = {
   proxyConfig: {
     ajax: {
       query: async ({ page }) => {
-        const response = await getLuckyBoxList({ 
+        const res: any = await getLuckyBoxList({ 
           page: page.currentPage, 
           pageSize: page.pageSize 
         });
+        const items = res?.data || res || [];
         return {
-          items: response || [],
-          total: response?.length || 0
+          items: items,
+          total: items.length || 0
         };
       },
     },
@@ -54,7 +55,7 @@ const gridOptions: VxeGridProps = {
 
 const [Grid, gridApi] = (useVbenVxeGrid as any)({ gridOptions });
 
-// 2. Xử lý Thêm mới: Reset form và mở Modal
+// 2. Xử lý Thêm mới
 function handleAdd() {
   isEditMode.value = false;
   formData.id = 0;
@@ -67,7 +68,7 @@ function handleAdd() {
   isModalVisible.value = true;
 }
 
-// 3. Xử lý Sửa: Đổ dữ liệu vào Form
+// 3. Xử lý Sửa
 function handleEdit(row: any) {
   isEditMode.value = true;
   formData.id = row.id;
@@ -80,12 +81,11 @@ function handleEdit(row: any) {
   isModalVisible.value = true;
 }
 
-// 4. Xử lý Lưu (OK): Gọi API Thêm hoặc Sửa
+// 4. Xử lý Lưu (OK)
 async function handleOk() {
   confirmLoading.value = true;
   try {
     if (isEditMode.value) {
-      // Gọi API Sửa
       await updateLuckyBox(formData.id, {
         weight: formData.weight,
         quantity: formData.quantity,
@@ -93,7 +93,6 @@ async function handleOk() {
       });
       message.success('Cập nhật thành công');
     } else {
-      // Gọi API Thêm mới (Cần đảm bảo hàm addLuckyBox đã import)
       await addLuckyBox(formData);
       message.success('Thêm quà mới thành công');
     }

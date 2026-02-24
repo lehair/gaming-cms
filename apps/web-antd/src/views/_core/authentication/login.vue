@@ -13,6 +13,7 @@ defineOptions({ name: 'Login' });
 
 const authStore = useAuthStore();
 
+/* ĐÃ COMMENT: Ẩn danh sách Role giả lập
 const MOCK_USER_OPTIONS: BasicOption[] = [
   {
     label: 'Super',
@@ -27,9 +28,11 @@ const MOCK_USER_OPTIONS: BasicOption[] = [
     value: 'jack',
   },
 ];
+*/
 
 const formSchema = computed((): VbenFormSchema[] => {
   return [
+    /* ĐÃ COMMENT: Ẩn ô dropdown chọn Role trên giao diện
     {
       component: 'VbenSelect',
       componentProps: {
@@ -44,11 +47,13 @@ const formSchema = computed((): VbenFormSchema[] => {
         .optional()
         .default('vben'),
     },
+    */
     {
       component: 'VbenInput',
       componentProps: {
         placeholder: $t('authentication.usernameTip'),
       },
+      /* ĐÃ COMMENT: Ẩn chức năng tự động điền tài khoản/mật khẩu khi chọn Role
       dependencies: {
         trigger(values, form) {
           if (values.selectAccount) {
@@ -65,6 +70,7 @@ const formSchema = computed((): VbenFormSchema[] => {
         },
         triggerFields: ['selectAccount'],
       },
+      */
       fieldName: 'username',
       label: $t('authentication.username'),
       rules: z.string().min(1, { message: $t('authentication.usernameTip') }),
@@ -78,6 +84,7 @@ const formSchema = computed((): VbenFormSchema[] => {
       label: $t('authentication.password'),
       rules: z.string().min(1, { message: $t('authentication.passwordTip') }),
     },
+    /* ĐÃ COMMENT: Ẩn thanh trượt Captcha bảo mật
     {
       component: markRaw(SliderCaptcha),
       fieldName: 'captcha',
@@ -85,6 +92,7 @@ const formSchema = computed((): VbenFormSchema[] => {
         message: $t('authentication.verifyRequiredTip'),
       }),
     },
+    */
   ];
 });
 </script>

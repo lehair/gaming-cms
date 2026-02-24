@@ -59,26 +59,23 @@ const gridOptions: VxeGridProps = {
   ],
   proxyConfig: {
     ajax: {
-      // ĐIỂM MẤU CHỐT: Hứng tham số thứ 2 (formValues)
       query: async (params: any, formValues: any) => {
-        
-        console.log("🔥 Dữ liệu Form bắt được:", formValues);
-
         const queryData = {
           page: params.page?.currentPage || 1,
           pageSize: params.page?.pageSize || 20,
-          userId: formValues?.userId || '', // Lấy đích danh từ formValues
+          userId: formValues?.userId || '',
           gameId: formValues?.gameId || ''
         };
 
         try {
-          const res = await getScoreHistoryList(queryData);
+          const res: any = await getScoreHistoryList(queryData);
+          // Lấy đúng tầng chứa items và total từ API
+          const payload = res?.data || res || {};
           return { 
-            items: res?.items || res?.data?.items || [], 
-            total: res?.total || res?.data?.total || 0 
+            items: payload.items || [], 
+            total: payload.total || 0 
           };
         } catch (error) {
-          console.error("Lỗi gọi API:", error);
           return { items: [], total: 0 };
         }
       },

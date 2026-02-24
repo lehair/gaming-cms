@@ -48,11 +48,7 @@ const gridOptions: VxeGridProps = {
   ],
   proxyConfig: {
     ajax: {
-      // Hứng tham số thứ 2 (formValues) để lấy dữ liệu tìm kiếm
       query: async (params: any, formValues: any) => {
-        
-        console.log("🔥 Dữ liệu Form bắt được (Reward):", formValues);
-
         const queryData = {
           page: params.page?.currentPage || 1,
           pageSize: params.page?.pageSize || 20,
@@ -61,13 +57,14 @@ const gridOptions: VxeGridProps = {
         };
 
         try {
-          const res = await getRewardHistoryList(queryData);
+          const res: any = await getRewardHistoryList(queryData);
+          // Lấy đúng tầng chứa items và total từ API
+          const payload = res?.data || res || {};
           return { 
-            items: res?.items || res?.data?.items || [], 
-            total: res?.total || res?.data?.total || 0 
+            items: payload.items || [], 
+            total: payload.total || 0 
           };
         } catch (error) {
-          console.error("Lỗi gọi API Nhận Quà:", error);
           return { items: [], total: 0 };
         }
       },

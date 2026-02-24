@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { reactive, ref } from 'vue';
+import { reactive } from 'vue';
 import { Page } from '@vben/common-ui';
 import { useVbenVxeGrid, type VxeGridProps } from '#/adapter/vxe-table';
 import { getLeaderboardList } from '#/api/gaming/leaderboard';
-import { message, Tag } from 'ant-design-vue';
+import { message, Button as AButton, Input as AInput, InputNumber as AInputNumber } from 'ant-design-vue';
 
 // 1. Bộ lọc tìm kiếm
 const searchForm = reactive({
@@ -21,7 +21,6 @@ const gridOptions: VxeGridProps = {
       align: 'center',
       slots: { default: 'rank_slot' } 
     },
-    // Cột User: Hiển thị Tên thật và SĐT
     { 
       title: 'Người chơi', 
       field: 'fullName', 
@@ -29,8 +28,6 @@ const gridOptions: VxeGridProps = {
       slots: { default: 'user_slot' }
     },
     { title: 'User ID (SĐT)', field: 'userId', width: 150 },
-    
-    // Cột Điểm: Format số cho dễ nhìn (ví dụ: 1,000)
     { 
       title: 'Điểm Số', 
       field: 'score', 
@@ -47,16 +44,17 @@ const gridOptions: VxeGridProps = {
     ajax: {
       query: async ({ page }) => {
         try {
-          const res = await getLeaderboardList({
+          const res: any = await getLeaderboardList({
             page: page.currentPage,
             pageSize: page.pageSize,
             gameId: searchForm.gameId,
             seasonId: searchForm.seasonId
           });
 
+          const payload = res?.data || res || {};
           return {
-            items: res.items || [],
-            total: res.total || 0
+            items: payload.items || [],
+            total: payload.total || 0
           };
         } catch (error) {
           return { items: [], total: 0 };

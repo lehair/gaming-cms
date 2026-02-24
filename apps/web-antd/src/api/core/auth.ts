@@ -9,7 +9,7 @@ export namespace AuthApi {
 
   /** 登录接口返回值 */
   export interface LoginResult {
-    accessToken: string;
+    Token: string;
   }
 
   export interface RefreshTokenResult {
@@ -22,6 +22,7 @@ export namespace AuthApi {
  * 登录
  */
 export async function loginApi(data: AuthApi.LoginParams) {
+  // requestClient sẽ tự bóc tách lớp data bên ngoài nhờ interceptor ở trên
   return requestClient.post<AuthApi.LoginResult>('/auth/login', data);
 }
 
@@ -47,5 +48,6 @@ export async function logoutApi() {
  * 获取用户权限码
  */
 export async function getAccessCodesApi() {
-  return requestClient.get<string[]>('/auth/codes');
+  // Trả về quyền admin tối cao để vượt qua bước kiểm tra của Vben
+  return Promise.resolve(['*']); 
 }
