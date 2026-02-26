@@ -52,11 +52,21 @@ const gridOptions: VxeGridProps = {
           });
 
           const payload = res?.data || res || {};
-          return {
-            items: payload.items || [],
-            total: payload.total || 0
-          };
-        } catch (error) {
+          const items = Array.isArray(payload) ? payload : (payload.items || []);
+          const total = payload.total || items.length || 0;
+          
+          return { items, total };
+        } catch (error: any) {
+
+          if (error && error.code === 0 && error.data) {
+            console.log("🛠️ Đã cứu được dữ liệu BXH bị ném nhầm:", error.data);
+            const payload = error.data;
+            const items = Array.isArray(payload) ? payload : (payload.items || []);
+            const total = payload.total || items.length || 0;
+            return { items, total };
+          }
+
+          console.error("❌ Lỗi lấy dữ liệu BXH:", error);
           return { items: [], total: 0 };
         }
       },

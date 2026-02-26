@@ -13,7 +13,7 @@ import { message, Modal as AModal, Form as AForm, FormItem as AFormItem, InputNu
 // 1. Trạng thái Modal và Form
 const isModalVisible = ref(false);
 const confirmLoading = ref(false);
-const isEditMode = ref(false); // Phân biệt Thêm hay Sửa
+const isEditMode = ref(false); 
 
 const formData = reactive({
   id: 0,
@@ -48,12 +48,23 @@ const gridOptions: VxeGridProps = {
   proxyConfig: {
     ajax: {
       query: async () => {
-        const res: any = await getLeaderboardPrizeList();
-        const items = res?.data || res || [];
-        return {
-          items: items,
-          total: items.length || 0
-        };
+        try {
+          const res: any = await getLeaderboardPrizeList();
+          const items = Array.isArray(res) ? res : (res?.data?.items || res?.items || res?.data || []);
+          const total = res?.total || res?.data?.total || items.length || 0;
+          return { items, total };
+
+        } catch (error: any) {
+          if (error && error.code === 0 && error.data) {
+            console.log("🛠️ Đã cứu được dữ liệu bị Frontend ném nhầm:", error.data);
+            const items = Array.isArray(error.data) ? error.data : (error.data.items || []);
+            const total = error.total || error.data?.total || items.length || 0;
+            return { items, total };
+          }
+          
+          console.error("❌ Lỗi mạng thật sự:", error);
+          return { items: [], total: 0 };
+        }
       },
     },
   },
@@ -61,7 +72,7 @@ const gridOptions: VxeGridProps = {
 
 const [Grid, gridApi] = (useVbenVxeGrid as any)({ gridOptions });
 
-// 3. Xử lý Thêm mới
+// Xử lý Form Thêm/Sửa/Xóa giữ nguyên...
 function handleAdd() {
   isEditMode.value = false;
   formData.id = 0;
@@ -75,7 +86,6 @@ function handleAdd() {
   isModalVisible.value = true;
 }
 
-// 4. Xử lý Sửa
 function handleEdit(row: any) {
   isEditMode.value = true;
   formData.id = row.id;
@@ -89,48 +99,51 @@ function handleEdit(row: any) {
   isModalVisible.value = true;
 }
 
-// 5. Xử lý Lưu (OK)
 async function handleOk() {
   if (formData.rankFrom > formData.rankTo) {
     message.warning('Hạng bắt đầu không được lớn hơn hạng kết thúc!');
     return;
   }
-
   confirmLoading.value = true;
   try {
     if (isEditMode.value) {
-      await updateLeaderboardPrize(formData.id, {
-        rankFrom: formData.rankFrom,
-        rankTo: formData.rankTo,
-        quantity: formData.quantity,
-        isActive: formData.isActive
-      });
+      await updateLeaderboardPrize(formData.id, formData);
       message.success('Cập nhật thành công');
     } else {
       await addLeaderboardPrize(formData);
-      message.success('Thêm giải thưởng mới thành công');
+      message.success('Thêm mới thành công');
     }
     isModalVisible.value = false;
     gridApi.reload(); 
-  } catch (error) {
-    message.error('Thao tác thất bại');
+  } catch (error: any) {
+    if (error && error.code === 0) {
+      message.success('Thao tác thành công');
+      isModalVisible.value = false;
+      gridApi.reload(); 
+    } else {
+      message.error('Thao tác thất bại');
+    }
   } finally {
     confirmLoading.value = false;
   }
 }
 
-// 6. Xử lý Xóa
 async function handleDelete(row: any) {
   AModal.confirm({
     title: 'Xác nhận xóa',
-    content: `Bạn có chắc muốn xóa phần quà (Rank ${row.rankFrom} - ${row.rankTo}) này không?`,
+    content: `Xóa phần quà (Rank ${row.rankFrom} - ${row.rankTo})?`,
     onOk: async () => {
       try {
         await deleteLeaderboardPrize(row.id);
-        message.success('Đã xóa giải thưởng');
+        message.success('Đã xóa');
         gridApi.reload();
-      } catch (error) {
-        message.error('Lỗi khi xóa bản ghi');
+      } catch (error: any) {
+        if (error && error.code === 0) {
+           message.success('Đã xóa');
+           gridApi.reload();
+        } else {
+           message.error('Lỗi khi xóa');
+        }
       }
     },
   });
@@ -150,9 +163,8 @@ async function handleDelete(row: any) {
     <div class="p-4">
       <Grid>
         <template #rank_slot="{ row, column }">
-          <span class="font-bold text-orange-500">Top {{ row[column.property] }}</span>
+          <span class="font-bold text-orange-500">Top {{ row[column.field] }}</span>
         </template>
-
         <template #action_slot="{ row }">
           <button @click="handleEdit(row)" class="text-blue-500 hover:underline mr-4">Sửa</button>
           <button @click="handleDelete(row)" class="text-red-500 hover:underline">Xóa</button>
@@ -161,7 +173,7 @@ async function handleDelete(row: any) {
     </div>
 
     <a-modal
-      v-model:visible="isModalVisible"
+      v-model:open="isModalVisible"
       :title="isEditMode ? 'Chỉnh sửa giải thưởng' : 'Thêm giải thưởng mới'"
       :confirm-loading="confirmLoading"
       @ok="handleOk"

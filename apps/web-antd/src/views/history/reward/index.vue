@@ -49,22 +49,34 @@ const gridOptions: VxeGridProps = {
   proxyConfig: {
     ajax: {
       query: async (params: any, formValues: any) => {
+        const formData = formValues || params.searchParams || params.form || {};
+        
         const queryData = {
           page: params.page?.currentPage || 1,
           pageSize: params.page?.pageSize || 20,
-          userId: formValues?.userId || '', 
-          gameId: formValues?.gameId || ''
+          userId: formData.userId || '', 
+          gameId: formData.gameId || ''
         };
 
         try {
           const res: any = await getRewardHistoryList(queryData);
-          // Lấy đúng tầng chứa items và total từ API
+          
           const payload = res?.data || res || {};
-          return { 
-            items: payload.items || [], 
-            total: payload.total || 0 
-          };
-        } catch (error) {
+          const items = Array.isArray(payload) ? payload : (payload.items || []);
+          const total = payload.total || items.length || 0;
+          
+          return { items, total };
+        } catch (error: any) {
+ 
+          if (error && error.code === 0 && error.data) {
+            console.log("🛠️ Đã cứu được dữ liệu Nhận Quà bị ném nhầm:", error.data);
+            const payload = error.data;
+            const items = Array.isArray(payload) ? payload : (payload.items || []);
+            const total = payload.total || items.length || 0;
+            return { items, total };
+          }
+          
+          console.error("❌ Lỗi lấy lịch sử nhận quà:", error);
           return { items: [], total: 0 };
         }
       },

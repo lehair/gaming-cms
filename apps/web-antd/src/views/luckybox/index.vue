@@ -39,15 +39,27 @@ const gridOptions: VxeGridProps = {
   proxyConfig: {
     ajax: {
       query: async ({ page }) => {
-        const res: any = await getLuckyBoxList({ 
-          page: page.currentPage, 
-          pageSize: page.pageSize 
-        });
-        const items = res?.data || res || [];
-        return {
-          items: items,
-          total: items.length || 0
-        };
+        try {
+          const res: any = await getLuckyBoxList({ 
+            page: page.currentPage, 
+            pageSize: page.pageSize 
+          });
+          
+          const items = Array.isArray(res) ? res : (res?.data?.items || res?.items || res?.data || []);
+          const total = res?.total || res?.data?.total || items.length || 0;
+          
+          return { items, total };
+        } catch (error: any) {
+          if (error && error.code === 0 && error.data) {
+            console.log("🛠️ Đã cứu được dữ liệu Luckybox bị ném nhầm:", error.data);
+            const items = Array.isArray(error.data) ? error.data : (error.data.items || []);
+            const total = error.total || error.data?.total || items.length || 0;
+            return { items, total };
+          }
+          
+          console.error("❌ Lỗi lấy danh sách Luckybox:", error);
+          return { items: [], total: 0 };
+        }
       },
     },
   },
@@ -98,8 +110,14 @@ async function handleOk() {
     }
     isModalVisible.value = false;
     gridApi.reload(); 
-  } catch (error) {
-    message.error('Thao tác thất bại');
+  } catch (error: any) {
+    if (error && error.code === 0) {
+      message.success('Thao tác thành công');
+      isModalVisible.value = false;
+      gridApi.reload(); 
+    } else {
+      message.error('Thao tác thất bại');
+    }
   } finally {
     confirmLoading.value = false;
   }
@@ -115,8 +133,13 @@ async function handleDelete(row: any) {
         await deleteLuckyBox(row.id);
         message.success('Đã xóa quà');
         gridApi.reload();
-      } catch (error) {
-        message.error('Lỗi khi xóa bản ghi');
+      } catch (error: any) {
+        if (error && error.code === 0) {
+          message.success('Đã xóa quà');
+          gridApi.reload();
+        } else {
+          message.error('Lỗi khi xóa bản ghi');
+        }
       }
     },
   });
@@ -151,7 +174,7 @@ async function handleDelete(row: any) {
     </div>
 
     <a-modal
-      v-model:visible="isModalVisible"
+      v-model:open="isModalVisible"
       :title="isEditMode ? 'Chỉnh sửa cấu hình quà' : 'Thêm cấu hình quà mới'"
       :confirm-loading="confirmLoading"
       @ok="handleOk"
