@@ -85,7 +85,44 @@ const routes: RouteRecordRaw[] = [
         meta: { title: 'Lịch sử nhận quà', icon: 'lucide:gift' },
       },
     ],
-  }
+  },
+  // --- MỤC QUẢN LÝ USER ---
+  {
+    path: '/users', // Menu cấp 1
+    name: 'UserManagementRoot',
+    component: BasicLayout,
+    meta: {
+      title: 'Users',
+      order: 999, // Cho lên trên cùng
+      icon: 'lucide:users',
+    },
+    children: [
+      {
+        path: 'index', // Menu cấp 2
+        name: 'UserManagementIndex',
+        component: () => import('#/views/users/index.vue'),
+        meta: {
+          title: 'Users',
+          icon: 'lucide:users',
+        },
+      },
+      // Nếu sau này có User Inventory, User Subs thì thêm vào đây
+    ],
+  },
+  {
+    path: '/subscriptions',
+    name: 'SubscriptionsRoot',
+    component: BasicLayout,
+    meta: { title: 'Subscriptions', order: 1005, icon: 'lucide:credit-card' },
+    children: [
+      {
+        path: 'packages',
+        name: 'PackagesIndex',
+        component: () => import('#/views/subscriptions/packages/index.vue'),
+        meta: { title: 'Packages', icon: 'lucide:package' },
+      },
+    ],
+  },
 ];
 
 export default routes;
