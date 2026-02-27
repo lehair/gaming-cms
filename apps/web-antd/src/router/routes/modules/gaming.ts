@@ -3,6 +3,30 @@ import type { RouteRecordRaw } from 'vue-router';
 const BasicLayout = () => import('#/layouts/basic.vue');
 
 const routes: RouteRecordRaw[] = [
+  {
+    path: '/homepage',
+    name: 'HomepageRoot',
+    component: BasicLayout,
+    redirect: '/homepage/index',
+    meta: {
+      title: 'Homepage',
+      order: -10,
+      icon: 'lucide:home',
+      hideChildrenInMenu: true,
+    },
+    children: [
+      {
+        path: 'index',
+        name: 'HomepageIndex',
+        component: () => import('#/views/homepage/index.vue'),
+        meta: {
+          title: 'Homepage',
+          icon: 'lucide:home',
+          affixTab: true,
+        },
+      },
+    ],
+  },
   // --- MỤC 1: LUCKYBOX ---
   {
     path: '/luckybox',

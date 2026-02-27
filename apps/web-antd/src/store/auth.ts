@@ -41,8 +41,8 @@ export const useAuthStore = defineStore('auth', () => {
         if (accessStore.loginExpired) {
           accessStore.setLoginExpired(false);
         } else {
-          // Lấy đường dẫn từ Backend, nếu Backend không trả về homePath thì lấy trang mặc định /homepage/index
-          let redirectPath = userInfo.homePath || preferences.app.defaultHomePath || '/homepage/index';
+          // Luôn dùng defaultHomePath, không lấy từ backend
+          let redirectPath = preferences.app.defaultHomePath || '/homepage/index';
           
           // Trả lại luồng chuyển trang mượt mà của Vue Router
           if (onSuccess) {
