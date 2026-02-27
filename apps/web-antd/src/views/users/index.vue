@@ -5,7 +5,16 @@ import { useVbenVxeGrid, type VxeGridProps } from '#/adapter/vxe-table';
 import { getUserList, updateUser, banUser } from '#/api/gaming/user';
 import { message, Modal as AModal, Tag as ATag, Input as AInput, Form as AForm, FormItem as AFormItem, Select as ASelect, SelectOption as ASelectOption } from 'ant-design-vue';
 
-// 1. Form tìm kiếm
+// Hàm bóc tách data vớt lỗi No Data
+const extractData = (res: any, err?: any) => {
+  const raw = res || err?.response?.data || err?.data || err || {};
+  const payload = raw?.data || raw || [];
+  const items = Array.isArray(payload) ? payload : (payload?.items || []);
+  const total = Array.isArray(payload) ? payload.length : (payload?.total || items.length || 0);
+  return { items, total };
+};
+
+// 1. Cấu hình Form Tìm kiếm (Username và Phone)
 const formOptions = {
   collapsed: false,
   schema: [
@@ -26,18 +35,18 @@ const formOptions = {
   ],
 };
 
-// 2. Cấu hình bảng
+// 2. Cấu hình Grid (Căn giữa toàn bộ các cột giống y hệt ảnh)
 const gridOptions: VxeGridProps = {
   columns: [
-    { field: 'id', title: 'ID', width: 60, align: 'center' }, // Tạo ID ảo ở backend
-    { field: 'username', title: 'Username', minWidth: 120 },
-    { field: 'msisdn', title: 'MSISDN', width: 150 },
+    { field: 'id', title: 'ID', width: 60, align: 'center' },
+    { field: 'username', title: 'Username', minWidth: 150, align: 'center' },
+    { field: 'msisdn', title: 'MSISDN', width: 150, align: 'center' },
     { field: 'status', title: 'Status', width: 100, slots: { default: 'status_slot' }, align: 'center' },
     { field: 'services', title: 'Services', minWidth: 120, align: 'center' },
-    { field: 'lastPayment', title: 'Last Payment', width: 120, align: 'center' },
-    { field: 'lastActive', title: 'Last Active', width: 120, align: 'center' },
-    { field: 'createdAt', title: 'Created At', width: 120, align: 'center' },
-    { title: 'Action', width: 120, slots: { default: 'action_slot' }, fixed: 'right', align: 'center' },
+    { field: 'lastPayment', title: 'Last Payment', width: 140, align: 'center' },
+    { field: 'lastActive', title: 'Last Active', width: 140, align: 'center' },
+    { field: 'createdAt', title: 'Created At', width: 180, align: 'center' },
+    { title: 'Action', width: 100, slots: { default: 'action_slot' }, fixed: 'right', align: 'center' },
   ],
   proxyConfig: {
     ajax: {
@@ -46,42 +55,34 @@ const gridOptions: VxeGridProps = {
           const res: any = await getUserList({
             page: page.currentPage,
             pageSize: page.pageSize,
-            username: formValues?.username || '',
-            msisdn: formValues?.msisdn || ''
+            username: formValues.username,
+            msisdn: formValues.msisdn
           });
-
-          const payload = res?.data || res || {};
-          const items = Array.isArray(payload) ? payload : (payload.items || []);
-          const total = payload.total || items.length || 0;
-          
-          return { items, total };
+          return extractData(res);
         } catch (error: any) {
-          // Bắt lỗi Vben chặn nhầm code: 0 giống như mẫu của ông
           if (error && error.code === 0 && error.data) {
-            console.log("🛠️ Đã cứu được dữ liệu User:", error.data);
-            const payload = error.data;
-            const items = Array.isArray(payload) ? payload : (payload.items || []);
-            const total = payload.total || items.length || 0;
-            return { items, total };
+            return extractData(error.data);
           }
-
-          console.error("❌ Lỗi lấy dữ liệu User:", error);
           return { items: [], total: 0 };
         }
       },
     },
   },
-  toolbarConfig: { refresh: true }
+  // Bật đúng 2 icon Kính lúp xanh và 4 ô vuông (Tắt nút refresh vì ảnh gốc không có)
+  toolbarConfig: { 
+    search: true, 
+    custom: true,
+    refresh: false 
+  }
 };
 
 const [Grid, gridApi] = (useVbenVxeGrid as any)({ formOptions, gridOptions });
 
-// --- XỬ LÝ SỬA VÀ KHÓA USER ---
+// --- XỬ LÝ SỰ KIỆN ---
 const isModalVisible = ref(false);
 const confirmLoading = ref(false);
 const editForm = reactive({ msisdn: '', username: '', status: '' });
 
-// Nút Sửa
 function handleEdit(row: any) {
   editForm.msisdn = row.msisdn;
   editForm.username = row.username;
@@ -89,7 +90,6 @@ function handleEdit(row: any) {
   isModalVisible.value = true;
 }
 
-// Lưu thông tin sửa
 async function handleSave() {
   confirmLoading.value = true;
   try {
@@ -104,7 +104,6 @@ async function handleSave() {
   }
 }
 
-// Nút Khóa / Mở Khóa
 function handleBan(row: any) {
   const newStatus = row.status === 'ACTIVE' ? 'BANNED' : 'ACTIVE'; 
   const actionText = row.status === 'ACTIVE' ? 'Ban' : 'Unban';
@@ -126,33 +125,42 @@ function handleBan(row: any) {
 </script>
 
 <template>
-  <Page title="User List">
-    <div class="p-4">
-      <Grid>
-        <template #status_slot="{ row }">
-          <a-tag v-if="row.status === 'ACTIVE'" color="success" class="px-2 border-transparent bg-green-50 text-green-600">Active</a-tag>
-          <a-tag v-else-if="row.status === 'BANNED'" color="error" class="px-2 border-transparent bg-red-50 text-red-600">Banned</a-tag>
-          <a-tag v-else color="default">{{ row.status }}</a-tag>
-        </template>
+  <Page>
+    <Grid>
+      <template #toolbar-actions>
+        <span class="text-[16px] text-gray-700 ml-1">User List</span>
+      </template>
 
-        <template #action_slot="{ row }">
-          <div class="flex justify-center gap-3">
-            <button @click="handleEdit(row)" class="text-gray-600 hover:text-blue-600 font-medium transition-colors">Edit</button>
-            <button 
-              @click="handleBan(row)" 
-              :class="row.status === 'ACTIVE' ? 'text-red-500 hover:text-red-700' : 'text-green-500 hover:text-green-700'"
-              class="font-medium transition-colors"
-            >
-              {{ row.status === 'ACTIVE' ? 'Ban' : 'Unban' }}
-            </button>
-          </div>
-        </template>
-      </Grid>
-    </div>
+      <template #status_slot="{ row }">
+        <a-tag v-if="row.status === 'ACTIVE'" style="color: #52c41a; background: #f6ffed; border-color: #b7eb8f; border-radius: 4px;">
+          Active
+        </a-tag>
+        <a-tag v-else style="color: #ff4d4f; background: #fff2f0; border-color: #ffccc7; border-radius: 4px;">
+          Banned
+        </a-tag>
+      </template>
+
+      <template #action_slot="{ row }">
+        <div class="flex justify-center gap-2">
+          <span 
+            @click="handleEdit(row)" 
+            class="text-gray-600 hover:text-blue-500 cursor-pointer transition-colors text-[14px]"
+          >
+            Edit
+          </span>
+          <span 
+            @click="handleBan(row)" 
+            class="text-[#ff4d4f] hover:text-red-700 cursor-pointer transition-colors text-[14px]"
+          >
+            {{ row.status === 'ACTIVE' ? 'Ban' : 'Unban' }}
+          </span>
+        </div>
+      </template>
+    </Grid>
 
     <a-modal v-model:visible="isModalVisible" title="Edit User" @ok="handleSave" :confirm-loading="confirmLoading">
-      <a-form layout="vertical">
-        <a-form-item label="MSISDN (Read-only)">
+      <a-form layout="vertical" class="mt-4">
+        <a-form-item label="MSISDN">
           <a-input v-model:value="editForm.msisdn" disabled />
         </a-form-item>
         <a-form-item label="Username">

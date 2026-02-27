@@ -121,8 +121,18 @@ const routes: RouteRecordRaw[] = [
         component: () => import('#/views/subscriptions/packages/index.vue'),
         meta: { title: 'Packages', icon: 'lucide:package' },
       },
+      {
+        path: 'user-subs',
+        name: 'UserSubsIndex',
+        component: () => import('#/views/subscriptions/user-subs/index.vue'),
+        meta: {
+          title: 'User Subs',
+          icon: 'lucide:user-check',
+        },
+      },
     ],
   },
+  
 ];
 
 export default routes;
