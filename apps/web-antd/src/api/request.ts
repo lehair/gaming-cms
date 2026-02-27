@@ -71,7 +71,26 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
     },
   });
 
-  // 处理返回的响应数据格式
+  // --- THÊM "THÔNG DỊCH VIÊN" Ở ĐÂY ---
+  // Tự động chuyển đổi format { code: 0 / 200 } của Backend thành { success: true } cho Vben hiểu
+  client.addResponseInterceptor({
+    fulfilled: (response) => {
+      const data = response.data;
+      if (data && typeof data === 'object') {
+        // Nếu Backend trả về trường 'code' là 0 hoặc 200 thì gán success = true
+        if (data.code === 0 || data.code === 200) {
+          data.success = true;
+        } else if ('code' in data) {
+          // Nếu có code nhưng khác 0 và 200 thì tính là lỗi
+          data.success = false;
+        }
+      }
+      return response;
+    },
+  });
+  // -----------------------------------
+
+  // 处理返回的响应数据格式 (GIỮ NGUYÊN BẢN GỐC CỦA VBEN ĐỂ WEB KHÔNG BỊ TRẮNG TRANG)
   client.addResponseInterceptor(
     defaultResponseInterceptor({
       codeField: 'success',

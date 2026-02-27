@@ -55,12 +55,7 @@ const gridOptions: VxeGridProps = {
           return { items, total };
 
         } catch (error: any) {
-          if (error && error.code === 0 && error.data) {
-            console.log("🛠️ Đã cứu được dữ liệu bị Frontend ném nhầm:", error.data);
-            const items = Array.isArray(error.data) ? error.data : (error.data.items || []);
-            const total = error.total || error.data?.total || items.length || 0;
-            return { items, total };
-          }
+          
           
           console.error("❌ Lỗi mạng thật sự:", error);
           return { items: [], total: 0 };
@@ -151,7 +146,7 @@ async function handleDelete(row: any) {
 </script>
 
 <template>
-  <Page title="Cấu hình Quà Leaderboard" description="Quản lý phần thưởng đua top theo thứ hạng (Rank)">
+  <Page title="Cấu hình Quà Leaderboard" >
     <template #extra>
        <button
         @click="handleAdd"

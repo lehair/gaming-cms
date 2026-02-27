@@ -58,13 +58,7 @@ const gridOptions: VxeGridProps = {
           return { items, total };
         } catch (error: any) {
 
-          if (error && error.code === 0 && error.data) {
-            console.log("🛠️ Đã cứu được dữ liệu BXH bị ném nhầm:", error.data);
-            const payload = error.data;
-            const items = Array.isArray(payload) ? payload : (payload.items || []);
-            const total = payload.total || items.length || 0;
-            return { items, total };
-          }
+          
 
           console.error("❌ Lỗi lấy dữ liệu BXH:", error);
           return { items: [], total: 0 };
@@ -87,7 +81,7 @@ function handleSearch() {
 </script>
 
 <template>
-  <Page title="Bảng Xếp Hạng Real-time" description="Dữ liệu được đồng bộ trực tiếp từ Redis">
+  <Page title="Bảng Xếp Hạng Real-time" >
     
     <template #extra>
       <div class="flex gap-2 items-center">

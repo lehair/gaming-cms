@@ -50,12 +50,6 @@ const gridOptions: VxeGridProps = {
           
           return { items, total };
         } catch (error: any) {
-          if (error && error.code === 0 && error.data) {
-            console.log("🛠️ Đã cứu được dữ liệu Luckybox bị ném nhầm:", error.data);
-            const items = Array.isArray(error.data) ? error.data : (error.data.items || []);
-            const total = error.total || error.data?.total || items.length || 0;
-            return { items, total };
-          }
           
           console.error("❌ Lỗi lấy danh sách Luckybox:", error);
           return { items: [], total: 0 };
@@ -147,7 +141,7 @@ async function handleDelete(row: any) {
 </script>
 
 <template>
-  <Page title="Quản lý Luckybox" description="Cấu hình tỉ lệ và danh sách quà tặng trực tiếp từ MySQL">
+  <Page title="Quản lý Luckybox" description="">
     <template #extra>
        <button
         @click="handleAdd"
